@@ -2,6 +2,9 @@ import {Link} from 'react-router';
 import {CartForm, Money, useOptimisticCart} from '@shopify/hydrogen';
 import {Breadcrumb} from '~/components/local/Breadcrumb';
 import {Container} from '~/components/local/Container';
+import {ClientOnly} from '~/components/local/ClientOnly';
+import {markCheckoutPending} from '~/lib/checkoutReturn';
+import {ContinueShoppingSetup} from '~/components/local/ContinueShoppingSetup';
 
 /**
  * @param {{ cart: import('@shopify/hydrogen').CartQueryDataReturn | null }}
@@ -10,11 +13,12 @@ export function LocalCartPage({cart: originalCart}) {
   const cart = useOptimisticCart(originalCart);
   const lines = cart?.lines?.nodes ?? [];
   const hasItems = lines.length > 0;
+  const checkoutUrl = cart?.checkoutUrl;
 
   return (
     <>
       <Breadcrumb items={[{to: '/', label: 'Home'}, {label: 'Your cart'}]} />
-      <Container className="py-10 md:py-14 max-w-5xl">
+      <Container className="py-10 md:py-14 max-w-5xl pb-24 lg:pb-14">
         <h1 className="font-display text-3xl sm:text-4xl font-semibold mb-8 text-center">
           Your cart
         </h1>
@@ -27,31 +31,29 @@ export function LocalCartPage({cart: originalCart}) {
             </p>
             <Link
               to="/"
-              className="inline-flex local-pill bg-primary-800 text-white px-6 py-2.5 text-sm font-semibold"
+              className="inline-flex local-btn-primary px-6 py-2.5 text-sm font-semibold"
             >
               Continue shopping
             </Link>
           </div>
         ) : (
-          <div className="grid lg:grid-cols-[1fr_340px] gap-10 items-start">
-            <ul className="space-y-4">
-              {lines.map((line) => (
-                <LocalCartLine key={line.id} line={line} />
-              ))}
-            </ul>
-
-            <aside className="local-card p-6 lg:sticky lg:top-36">
-              <h2 className="font-display text-xl font-semibold mb-4">
+          <div className="local-cart-layout items-start">
+            <div
+              className="local-card local-cart-summary local-cart-summary-panel p-6 lg:sticky lg:top-28 shadow-sm w-full min-w-0 max-w-full"
+              role="complementary"
+              aria-label="Order summary"
+            >
+              <h2 className="font-display text-xl font-semibold mb-4 text-local-ink">
                 Order summary
               </h2>
-              <dl className="space-y-2 text-sm mb-6">
+              <dl className="space-y-2 text-sm mb-6 text-local-ink">
                 <div className="flex justify-between">
                   <dt className="text-local-muted">Items</dt>
-                  <dd>{cart?.totalQuantity ?? 0}</dd>
+                  <dd className="font-medium">{cart?.totalQuantity ?? 0}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-local-muted">Subtotal</dt>
-                  <dd>
+                  <dd className="font-medium">
                     {cart?.cost?.subtotalAmount ? (
                       <Money data={cart.cost.subtotalAmount} />
                     ) : (
@@ -73,18 +75,46 @@ export function LocalCartPage({cart: originalCart}) {
               {cart?.checkoutUrl ? (
                 <a
                   href={cart.checkoutUrl}
-                  className="block w-full text-center local-pill bg-primary-800 text-white py-3 text-sm font-semibold hover:bg-primary-700"
+                  className="local-btn-primary w-full block"
+                  onClick={() => markCheckoutPending()}
                 >
                   Checkout
                 </a>
-              ) : null}
+              ) : (
+                <p className="text-sm text-local-ink mb-2">
+                  Checkout link is not ready yet. Try refreshing the page or
+                  add the item again.
+                </p>
+              )}
               <p className="text-xs text-local-muted text-center mt-3">
                 Secure payment on Shopify
               </p>
-            </aside>
+            </div>
+
+            <ul className="local-cart-lines space-y-4 w-full min-w-0">
+              {lines.map((line) => (
+                <LocalCartLine key={line.id} line={line} />
+              ))}
+            </ul>
           </div>
         )}
+        <ContinueShoppingSetup />
       </Container>
+
+      {hasItems && checkoutUrl ? (
+        <div
+          className="local-mobile-cart-cta lg:hidden fixed bottom-0 inset-x-0 z-40 border-t p-4 safe-area-pb"
+          aria-hidden={false}
+        >
+          <a
+            href={checkoutUrl}
+            className="local-btn-primary w-full block text-center"
+            onClick={() => markCheckoutPending()}
+          >
+            Checkout
+          </a>
+        </div>
+      ) : null}
     </>
   );
 }
@@ -110,33 +140,43 @@ function LocalCartLine({line}) {
             {product.title}
           </Link>
         </h2>
-        <p className="text-sm font-semibold mt-1">
+        <div className="text-sm font-semibold mt-1 text-local-ink">
           <Money data={line.cost.totalAmount} />
-        </p>
-        <div className="flex items-center gap-2 mt-3">
-          <CartLineUpdate lineId={id} quantity={Math.max(0, quantity - 1)}>
-            <button
-              type="submit"
-              className="w-8 h-8 rounded-full border border-local-border flex items-center justify-center hover:bg-local-sand"
-              aria-label="Decrease quantity"
-              disabled={quantity <= 1}
-            >
-              −
-            </button>
-          </CartLineUpdate>
-          <span className="w-8 text-center text-sm">{quantity}</span>
-          <CartLineUpdate lineId={id} quantity={quantity + 1}>
-            <button
-              type="submit"
-              className="w-8 h-8 rounded-full border border-local-border flex items-center justify-center hover:bg-local-sand"
-              aria-label="Increase quantity"
-            >
-              +
-            </button>
-          </CartLineUpdate>
         </div>
+        <ClientOnly
+          fallback={
+            <p className="text-sm text-local-muted mt-3">Qty: {quantity}</p>
+          }
+        >
+          <div className="flex items-center gap-2 mt-3">
+            <CartLineUpdate lineId={id} quantity={Math.max(0, quantity - 1)}>
+              <button
+                type="submit"
+                className="w-8 h-8 rounded-full border border-local-border flex items-center justify-center hover:bg-local-sand text-local-ink"
+                aria-label="Decrease quantity"
+                disabled={quantity <= 1}
+              >
+                −
+              </button>
+            </CartLineUpdate>
+            <span className="w-8 text-center text-sm text-local-ink">
+              {quantity}
+            </span>
+            <CartLineUpdate lineId={id} quantity={quantity + 1}>
+              <button
+                type="submit"
+                className="w-8 h-8 rounded-full border border-local-border flex items-center justify-center hover:bg-local-sand text-local-ink"
+                aria-label="Increase quantity"
+              >
+                +
+              </button>
+            </CartLineUpdate>
+          </div>
+        </ClientOnly>
       </div>
-      <CartLineRemove lineId={id} />
+      <ClientOnly fallback={null}>
+        <CartLineRemove lineId={id} />
+      </ClientOnly>
     </li>
   );
 }
@@ -164,7 +204,7 @@ function CartLineRemove({lineId}) {
     >
       <button
         type="submit"
-        className="text-local-muted hover:text-red-600 p-1 shrink-0 self-start text-sm font-medium"
+        className="text-local-ink hover:text-red-600 p-1 shrink-0 self-start text-sm font-medium"
         aria-label="Remove item"
       >
         Remove

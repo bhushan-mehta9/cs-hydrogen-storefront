@@ -15,15 +15,31 @@ import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import tailwindCss from './styles/tailwind.css?url';
 import localThemeCss from './styles/local-theme.css?url';
-import {PageLayout} from './components/PageLayout';
+import {LocalMainLayout} from './components/local/LocalMainLayout';
+import {ScrollToTop} from './components/local/ScrollToTop';
+import {LocalNotFound} from './components/local/LocalNotFound';
+import {COLLECTIONS_NAV_QUERY} from './lib/collectionsNavQuery';
+import {getCatalogSenseLoaderState} from './lib/catalogSenseConfig';
+import {resolveCheckoutDomain} from './lib/shopifyEnv';
+import {LocalCatalogSenseAnalytics} from './components/local/LocalCatalogSenseAnalytics';
+import {LocalCatalogSenseDevKeyAlert} from './components/local/LocalCatalogSenseDevKeyAlert';
+import {ClearCartAfterShopifyReturn} from './components/local/ClearCartAfterShopifyReturn';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
  * @type {ShouldRevalidateFunction}
  */
-export const shouldRevalidate = ({formMethod, currentUrl, nextUrl}) => {
+export const shouldRevalidate = ({formMethod, currentUrl, nextUrl, defaultShouldRevalidate}) => {
   // revalidate when a mutation is performed e.g add to cart, login...
   if (formMethod && formMethod !== 'GET') return true;
+
+  // Keep cart badge in sync after cart route actions from any page
+  if (
+    currentUrl.pathname === '/cart' ||
+    nextUrl.pathname === '/cart'
+  ) {
+    return defaultShouldRevalidate;
+  }
 
   // revalidate when manually revalidating via useRevalidator
   if (currentUrl.toString() === nextUrl.toString()) return true;
@@ -88,13 +104,15 @@ export async function loader(args) {
   return {
     ...deferredData,
     ...criticalData,
+    ...getCatalogSenseLoaderState(env),
     publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
+    publicStorefrontUrl: env.PUBLIC_STOREFRONT_URL,
     shop: getShopAnalytics({
       storefront,
       publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
     }),
     consent: {
-      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
+      checkoutDomain: resolveCheckoutDomain(env),
       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
       withPrivacyBanner: false,
       // localize the privacy banner
@@ -147,10 +165,20 @@ function loadDeferredData({context}) {
       console.error(error);
       return null;
     });
+  const collectionsNav = storefront
+    .query(COLLECTIONS_NAV_QUERY, {
+      cache: storefront.CacheLong(),
+    })
+    .catch((error) => {
+      console.error(error);
+      return null;
+    });
+
   return {
     cart: cart.get(),
     isLoggedIn: customerAccount.isLoggedIn(),
     footer,
+    collectionsNav,
   };
 }
 
@@ -189,15 +217,45 @@ export default function App() {
     return <Outlet />;
   }
 
+  const catalogSense = data.config;
+  const layout = (
+    <>
+      {data.liveKeyBlockedOnLocalhost ? (
+        <LocalCatalogSenseDevKeyAlert />
+      ) : null}
+      <ClearCartAfterShopifyReturn />
+      <ScrollToTop />
+      <LocalMainLayout
+        cart={data.cart}
+        collectionsNav={data.collectionsNav}
+        isLoggedIn={data.isLoggedIn}
+      >
+        <Outlet />
+      </LocalMainLayout>
+    </>
+  );
+
   return (
     <Analytics.Provider
       cart={data.cart}
       shop={data.shop}
       consent={data.consent}
+      canTrack={
+        catalogSense?.devConsent ? () => true : undefined
+      }
     >
-      <PageLayout {...data}>
-        <Outlet />
-      </PageLayout>
+      {catalogSense ? (
+        <LocalCatalogSenseAnalytics
+          publishableKey={catalogSense.publishableKey}
+          endpoint={catalogSense.endpoint}
+          debug={catalogSense.debug}
+          devConsent={catalogSense.devConsent}
+        >
+          {layout}
+        </LocalCatalogSenseAnalytics>
+      ) : (
+        layout
+      )}
     </Analytics.Provider>
   );
 }
@@ -214,8 +272,12 @@ export function ErrorBoundary() {
     errorMessage = error.message;
   }
 
+  if (errorStatus === 404) {
+    return <LocalNotFound />;
+  }
+
   return (
-    <div className="route-error">
+    <div className="route-error local-storefront p-8">
       <h1>Oops</h1>
       <h2>{errorStatus}</h2>
       {errorMessage && (

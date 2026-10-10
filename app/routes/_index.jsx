@@ -116,8 +116,7 @@ export default function Homepage() {
             Shop by collection
           </h2>
           <p className="text-local-muted max-w-xl mx-auto">
-            Hover <strong className="font-medium text-local-ink">Collections</strong>{' '}
-            in the menu to browse categories with products.
+            Browse curated collections from your Shopify catalog.
           </p>
         </div>
         {collections.length > 0 ? (

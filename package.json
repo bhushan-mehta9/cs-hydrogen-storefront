@@ -13,6 +13,8 @@
   },
   "prettier": "@shopify/prettier-config",
   "dependencies": {
+    "@catalogsense/hydrogen": "file:vendor/catalogsense-hydrogen-0.1.0.tgz",
+    "@catalogsense/sdk": "file:vendor/catalogsense-sdk-0.1.0.tgz",
     "@shopify/hydrogen": "2026.4.7",
     "graphql": "^16.10.0",
     "graphql-tag": "^2.12.6",

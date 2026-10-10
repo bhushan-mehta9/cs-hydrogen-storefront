@@ -2,6 +2,26 @@ import {ServerRouter} from 'react-router';
 import {isbot} from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
 import {createContentSecurityPolicy} from '@shopify/hydrogen';
+import {GOOGLE_FONTS_CSP} from './lib/googleFontsCsp';
+import {resolveCheckoutDomain, normalizeShopHost} from './lib/shopifyEnv';
+
+/**
+ * @param {Env} env
+ * @returns {string[]}
+ */
+function getCatalogSenseConnectOrigins(env) {
+  if (!env.PUBLIC_CATALOGSENSE_PUBLISHABLE_KEY?.trim()) return [];
+
+  const raw =
+    env.PUBLIC_CATALOGSENSE_API_ORIGIN?.trim() ||
+    'https://vapp.catalogsense.com';
+
+  try {
+    return [new URL(raw).origin];
+  } catch {
+    return ['https://vapp.catalogsense.com'];
+  }
+}
 
 /**
  * @param {Request} request
@@ -17,11 +37,20 @@ export default async function handleRequest(
   reactRouterContext,
   context,
 ) {
+  const catalogSenseConnectOrigins = getCatalogSenseConnectOrigins(
+    context.env,
+  );
+
   const {nonce, header, NonceProvider} = createContentSecurityPolicy({
     shop: {
-      checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
-      storeDomain: context.env.PUBLIC_STORE_DOMAIN,
+      checkoutDomain: resolveCheckoutDomain(context.env),
+      storeDomain: normalizeShopHost(context.env.PUBLIC_STORE_DOMAIN),
     },
+    styleSrc: GOOGLE_FONTS_CSP.styleSrc,
+    fontSrc: GOOGLE_FONTS_CSP.fontSrc,
+    ...(catalogSenseConnectOrigins.length
+      ? {connectSrc: catalogSenseConnectOrigins}
+      : {}),
   });
 
   const body = await renderToReadableStream(

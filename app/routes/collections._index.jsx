@@ -34,7 +34,7 @@ export default function Collections() {
           Shop by collection
         </h1>
         <p className="text-local-muted text-center max-w-lg mx-auto mb-10">
-          Browse categories from your Shopify store — same menu on every page.
+          Pick a collection to explore products from your neighborhood makers.
         </p>
 
         {collections.length > 0 ? (

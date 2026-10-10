@@ -1,6 +1,5 @@
 import {Link, useNavigate} from 'react-router';
 import {AddToCartButton} from './AddToCartButton';
-import {useAside} from './Aside';
 
 /**
  * @param {{
@@ -12,11 +11,12 @@ export function ProductForm({
   productOptions,
   selectedVariant,
   hideAddToCart = false,
+  addToCartClassName,
+  noticeName,
 }) {
   const navigate = useNavigate();
-  const {open} = useAside();
   return (
-    <div className="product-form">
+    <div className="product-form local-product-form">
       {productOptions.map((option) => {
         // If there is only a single value in the option values, don't display the option
         if (option.optionValues.length === 1) return null;
@@ -99,12 +99,14 @@ export function ProductForm({
       })}
       {!hideAddToCart && (
         <AddToCartButton
-          disabled={!selectedVariant || !selectedVariant.availableForSale}
-          onClick={() => {
-            open('cart');
-          }}
+          className={
+            addToCartClassName ??
+            'local-btn-primary local-add-to-cart cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+          }
+          disabled={!selectedVariant?.id || !selectedVariant.availableForSale}
+          noticeName={noticeName}
           lines={
-            selectedVariant
+            selectedVariant?.id
               ? [
                   {
                     merchandiseId: selectedVariant.id,

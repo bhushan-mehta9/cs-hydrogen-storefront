@@ -2,13 +2,12 @@ import {Link, useLoaderData} from 'react-router';
 import {Image, getPaginationVariables} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import {ContentPageShell} from '~/components/local/ContentPageShell';
 
-/**
- * @type {Route.MetaFunction}
- */
-export const meta = ({data}) => {
-  return [{title: `Hydrogen | ${data?.blog.title ?? ''} blog`}];
-};
+/** @type {import('./+types/blogs.$blogHandle._index').Route.MetaFunction} */
+export const meta = ({data}) => [
+  {title: `${data?.blog.title ?? 'Blog'} — Local`},
+];
 
 /**
  * @param {Route.LoaderArgs} args
@@ -72,9 +71,16 @@ export default function Blog() {
   const {articles} = blog;
 
   return (
-    <div className="blog">
-      <h1>{blog.title}</h1>
-      <div className="blog-grid">
+    <ContentPageShell
+      breadcrumb={[
+        {to: '/', label: 'Home'},
+        {to: '/blogs', label: 'Blog'},
+        {label: blog.title},
+      ]}
+      title={blog.title}
+      subtitle="Articles from this blog."
+    >
+      <div className="grid sm:grid-cols-2 gap-6">
         <PaginatedResourceSection connection={articles}>
           {({node: article, index}) => (
             <ArticleItem
@@ -85,7 +91,7 @@ export default function Blog() {
           )}
         </PaginatedResourceSection>
       </div>
-    </div>
+    </ContentPageShell>
   );
 }
 
@@ -102,23 +108,31 @@ function ArticleItem({article, loading}) {
     day: 'numeric',
   }).format(new Date(article.publishedAt));
   return (
-    <div className="blog-article" key={article.id}>
-      <Link to={`/blogs/${article.blog.handle}/${article.handle}`}>
-        {article.image && (
-          <div className="blog-article-image">
+    <article className="local-card overflow-hidden flex flex-col" key={article.id}>
+      <Link
+        to={`/blog/${article.blog.handle}/${article.handle}`}
+        className="flex flex-col grow"
+      >
+        {article.image ? (
+          <div className="aspect-[16/10] bg-local-sand overflow-hidden">
             <Image
               alt={article.image.altText || article.title}
-              aspectRatio="3/2"
+              aspectRatio="16/10"
               data={article.image}
               loading={loading}
               sizes="(min-width: 768px) 50vw, 100vw"
+              className="w-full h-full object-cover"
             />
           </div>
-        )}
-        <h3>{article.title}</h3>
-        <small>{publishedAt}</small>
+        ) : null}
+        <div className="p-5">
+          <time className="text-xs text-local-muted">{publishedAt}</time>
+          <h3 className="font-display text-xl font-semibold mt-1">
+            {article.title}
+          </h3>
+        </div>
       </Link>
-    </div>
+    </article>
   );
 }
 

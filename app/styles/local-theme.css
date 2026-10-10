@@ -27,6 +27,19 @@
 
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
+/*
+ * @theme tokens are for Tailwind utilities; plain var(--color-*) in CSS needs :root.
+ */
+:root,
+[data-theme='light'] {
+  --color-background: #faf8f5;
+  --color-local-cream: #f4efe6;
+  --color-local-sand: #ebe4d8;
+  --color-local-ink: #1a1a1a;
+  --color-local-muted: #5c5c5c;
+  --color-local-border: #e3ddd3;
+}
+
 [data-theme='dark'] {
   --color-background: #121816;
   --color-local-cream: #1a211e;
@@ -69,4 +82,367 @@ body {
 
 [data-theme='dark'] .local-card {
   background: #1a211e;
+}
+
+.local-product-form.product-form {
+  margin-bottom: 0.5rem;
+}
+
+.local-product-form .product-options h5 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-local-muted);
+  margin-bottom: 0.5rem;
+}
+
+.local-product-form .product-options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.local-product-form .product-options-item {
+  border-radius: 9999px !important;
+  border: 1px solid var(--color-local-border) !important;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.875rem;
+  background: white;
+  cursor: pointer;
+  opacity: 1 !important;
+}
+
+.local-product-form .product-options-item:disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed;
+}
+
+[data-theme='dark'] .local-product-form .product-options-item {
+  background: #1a211e;
+}
+
+.local-product-form .product-options-item[style*='border: 1px solid black'] {
+  border-color: var(--color-primary-700) !important;
+  background: var(--color-primary-50);
+}
+
+[data-theme='dark']
+  .local-product-form
+  .product-options-item[style*='border: 1px solid black'] {
+  background: var(--color-primary-900);
+}
+
+.local-storefront header nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.local-announcement-bar {
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
+.local-breadcrumb,
+.local-breadcrumb a,
+.local-breadcrumb span {
+  color: var(--color-local-muted);
+}
+
+.local-breadcrumb a:hover {
+  color: var(--color-local-ink);
+}
+
+.local-breadcrumb span.text-local-ink,
+.local-breadcrumb .text-local-ink {
+  color: var(--color-local-ink);
+}
+
+.local-dev-alert {
+  color: #1a1a1a;
+}
+
+.local-storefront .local-header a,
+.local-storefront .local-header button {
+  color: var(--color-local-ink);
+}
+
+.local-header {
+  box-shadow: none;
+  background-color: var(--color-background, #faf8f5) !important;
+  border-bottom: 1px solid var(--color-local-border);
+}
+
+[data-theme='dark'] .local-header {
+  background-color: var(--color-background, #121816) !important;
+}
+
+.local-mobile-cart-cta {
+  background-color: var(--color-background, #faf8f5);
+  border-color: var(--color-local-border);
+  box-shadow: 0 -4px 24px rgb(0 0 0 / 0.08);
+}
+
+[data-theme='dark'] .local-mobile-cart-cta {
+  background-color: var(--color-background, #121816);
+}
+
+/* Skeleton app.css targets bare `aside` (Hydrogen cart drawer) — do not apply to Local cart summary */
+.local-storefront .local-cart-summary-panel {
+  position: static;
+  right: auto;
+  top: auto;
+  width: 100%;
+  height: auto;
+  transform: none;
+  box-shadow: none;
+}
+
+@media (min-width: 1024px) {
+  .local-storefront .local-cart-summary-panel {
+    position: sticky;
+    top: 7rem;
+  }
+}
+
+.local-storefront main {
+  overflow-x: clip;
+}
+
+.local-cart-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  width: 100%;
+  max-width: 100%;
+}
+
+.local-cart-summary-panel {
+  order: 1;
+}
+
+.local-cart-lines {
+  order: 2;
+}
+
+@media (min-width: 1024px) {
+  .local-cart-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 2.5rem;
+  }
+
+  .local-cart-lines {
+    order: 1;
+  }
+
+  .local-cart-summary-panel {
+    order: 2;
+  }
+}
+
+.local-search .local-search-input,
+.local-search input[type='search'] {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  margin: 0;
+  padding: 0;
+  min-height: 1.25rem;
+  line-height: 1.4;
+}
+
+.local-search input[type='search']::-webkit-search-decoration,
+.local-search input[type='search']::-webkit-search-cancel-button {
+  display: none;
+}
+
+.local-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background-color: #1a1a1a;
+  color: #ffffff;
+  padding: 0.875rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  border: none;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    opacity 0.15s ease;
+  text-align: center;
+  font-family: inherit;
+}
+
+.local-btn-primary:hover:not(:disabled) {
+  background-color: #333333;
+}
+
+[data-theme='dark'] .local-btn-primary {
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
+[data-theme='dark'] .local-btn-primary:hover:not(:disabled) {
+  background-color: #333333;
+}
+
+.local-btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.local-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid var(--color-local-border);
+  background: transparent;
+  color: var(--color-local-ink);
+  padding: 0.875rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.local-btn-secondary:hover {
+  background-color: var(--color-local-sand);
+}
+
+.local-add-to-cart {
+  box-shadow: 0 1px 2px rgb(31 61 50 / 0.12);
+}
+
+.local-storefront form:has(.local-add-to-cart) {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.local-storefront form:has(.local-add-to-cart) .local-add-to-cart {
+  width: 100%;
+}
+
+/* Pointer cursor on interactive controls (header, footer, all Local pages) */
+.local-storefront a[href]:not([aria-disabled='true']),
+.local-storefront button:not(:disabled),
+.local-storefront [role='button']:not([aria-disabled='true']),
+.local-storefront label[for],
+.local-storefront summary,
+.local-storefront input[type='submit']:not(:disabled),
+.local-storefront input[type='button']:not(:disabled),
+.local-storefront select:not(:disabled) {
+  cursor: pointer;
+}
+
+.local-storefront button:disabled,
+.local-storefront input:disabled,
+.local-storefront a[aria-disabled='true'] {
+  cursor: not-allowed;
+}
+
+.local-storefront nav a,
+.local-storefront footer a,
+.local-storefront .local-product-form .product-options-item:not(:disabled) {
+  cursor: pointer;
+}
+
+.local-storefront .local-dropdown-panel a {
+  cursor: pointer;
+}
+
+/* No underline on links (overrides reset.css a:hover) */
+/* FAQ accordions (Shopify HTML or fallback) */
+.local-faq details,
+.local-faq .local-faq-item {
+  background: white;
+  border: 1px solid var(--color-local-border);
+  border-radius: 1rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+[data-theme='dark'] .local-faq details,
+[data-theme='dark'] .local-faq .local-faq-item {
+  background: #1a211e;
+}
+
+.local-faq summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--color-local-ink);
+  list-style: none;
+  padding-right: 1.5rem;
+  position: relative;
+}
+
+.local-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.local-faq summary::after {
+  content: '+';
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-weight: 400;
+  color: var(--color-local-muted);
+}
+
+.local-faq details[open] summary::after {
+  content: '−';
+}
+
+.local-faq details p,
+.local-faq .local-faq-item p {
+  margin-top: 0.75rem;
+  margin-bottom: 0;
+  color: var(--color-local-muted);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.local-storefront a,
+.local-storefront a:hover,
+.local-storefront a:focus,
+.local-storefront a:focus-visible,
+.local-storefront a:active,
+.local-storefront .link:hover {
+  text-decoration: none;
+}
+
+/* Primary actions stay high-contrast (reset.css sets all links to black) */
+.local-storefront a.local-btn-primary,
+.local-storefront a.local-btn-primary:hover,
+.local-storefront a.local-btn-primary:focus,
+.local-storefront a.local-btn-primary:active {
+  color: #ffffff !important;
+  background-color: #1a1a1a !important;
+}
+
+.local-storefront .local-cart-summary {
+  color: #1a1a1a;
+}
+
+[data-theme='dark'] .local-storefront .local-cart-summary {
+  color: var(--color-local-ink);
+}
+
+.local-storefront .local-cart-count-badge {
+  background-color: #ffffff;
+  color: #1a1a1a;
+  border: 2px solid #1a1a1a;
 }

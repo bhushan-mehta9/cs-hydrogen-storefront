@@ -4,7 +4,7 @@ import {Container} from '~/components/local/Container';
 
 export function Breadcrumb({items}) {
   return (
-    <div className="border-b border-local-border bg-local-cream dark:bg-primary-950/50 py-4">
+    <div className="local-breadcrumb border-b border-local-border bg-local-cream dark:bg-primary-950/50 py-4">
       <Container>
         <p className="text-sm text-local-muted flex flex-wrap items-center gap-2">
           {items.map((item, index) => (

@@ -22,6 +22,28 @@ export async function action({request, context}) {
 
   const formData = await request.formData();
 
+  if (formData.get('checkoutReturnClear') === '1') {
+    const current = await cart.get();
+    const lineIds =
+      current?.lines?.nodes?.map((line) => line.id).filter(Boolean) ?? [];
+    const result =
+      lineIds.length > 0
+        ? await cart.removeLines(lineIds)
+        : {cart: current, errors: [], warnings: []};
+
+    const cartId = result?.cart?.id;
+    const headers = cartId ? cart.setCartId(result.cart.id) : new Headers();
+
+    return data(
+      {
+        cart: result.cart,
+        errors: result.errors ?? [],
+        warnings: result.warnings ?? [],
+      },
+      {headers},
+    );
+  }
+
   const {action, inputs} = CartForm.getFormInput(formData);
 
   if (!action) {

@@ -11,6 +11,9 @@ import {mapFromHydrogenProduct} from '~/lib/mapFromHydrogenProduct';
 
 const tabs = ['Description', 'Details', 'Shipping'];
 
+const ADD_TO_CART_CLASS =
+  'local-btn-primary local-add-to-cart w-full sm:flex-1 min-h-[3rem]';
+
 /**
  * @param {{
  *   product: import('storefrontapi.generated').ProductFragment;
@@ -20,9 +23,17 @@ const tabs = ['Description', 'Details', 'Shipping'];
  */
 export function LocalProductPage({product, selectedVariant, productOptions}) {
   const [activeTab, setActiveTab] = useState('Description');
-  const mapped = mapFromHydrogenProduct(product, selectedVariant);
+  const cartVariant =
+    selectedVariant?.id != null
+      ? selectedVariant
+      : product.selectedOrFirstAvailableVariant ??
+        product.adjacentVariants?.find((v) => v?.availableForSale) ??
+        product.adjacentVariants?.[0] ??
+        null;
+  const mapped = mapFromHydrogenProduct(product, cartVariant);
   const imageUrl =
-    selectedVariant?.image?.url || product.featuredImage?.url || mapped?.image;
+    cartVariant?.image?.url || product.featuredImage?.url || mapped?.image;
+  const canAdd = Boolean(cartVariant?.id && cartVariant.availableForSale);
 
   if (!mapped) return null;
 
@@ -42,24 +53,28 @@ export function LocalProductPage({product, selectedVariant, productOptions}) {
         ]}
       />
       <Container className="py-10 md:py-14">
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16">
-          <div className="rounded-2xl overflow-hidden bg-local-sand aspect-square">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
+          <div className="rounded-2xl overflow-hidden bg-local-sand aspect-square lg:sticky lg:top-28 shadow-sm ring-1 ring-local-border/50">
             {imageUrl ? (
               <img
                 src={imageUrl}
                 alt={mapped.name}
                 className="w-full h-full object-cover"
               />
-            ) : null}
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-local-muted">
+                No image
+              </div>
+            )}
           </div>
 
-          <div className="flex flex-col">
+          <div className="flex flex-col min-w-0">
             {mapped.discount > 0 && (
               <span className="local-pill self-start bg-primary-100 text-primary-900 text-xs font-semibold px-3 py-1 mb-4">
                 On sale
               </span>
             )}
-            <h1 className="font-display text-4xl sm:text-5xl font-semibold mb-4">
+            <h1 className="font-display text-4xl sm:text-5xl font-semibold mb-4 leading-tight">
               {mapped.name}
             </h1>
             <div className="flex items-center gap-2 mb-4">
@@ -69,33 +84,49 @@ export function LocalProductPage({product, selectedVariant, productOptions}) {
             <Price
               price={mapped.price}
               discount={mapped.discount}
-              className="mb-6 text-xl"
+              className="mb-5 text-xl"
             />
-            <p className="text-local-muted mb-6">{product.description}</p>
+            {product.description ? (
+              <p className="text-local-muted mb-6 leading-relaxed line-clamp-4 lg:line-clamp-none">
+                {product.description}
+              </p>
+            ) : null}
 
-            <ProductForm
-              productOptions={productOptions}
-              selectedVariant={selectedVariant}
-              hideAddToCart
-            />
+            <div className="mb-8 space-y-4">
+              <ProductForm
+                productOptions={productOptions}
+                selectedVariant={cartVariant}
+                hideAddToCart
+              />
 
-            <div className="flex flex-col sm:flex-row gap-3 mb-10 mt-4">
-              {selectedVariant?.id ? (
-                <AddToCartButton
-                  lines={[
-                    {merchandiseId: selectedVariant.id, quantity: 1},
-                  ]}
-                  className="local-pill flex-1 bg-primary-800 text-white px-6 py-3.5 text-sm font-semibold hover:bg-primary-700 transition-colors"
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <div className="flex-1 min-w-0">
+                  <AddToCartButton
+                    className={ADD_TO_CART_CLASS}
+                    disabled={!canAdd}
+                    noticeName={product.title}
+                    lines={
+                      cartVariant?.id
+                        ? [
+                            {
+                              merchandiseId: cartVariant.id,
+                              quantity: 1,
+                              selectedVariant: cartVariant,
+                            },
+                          ]
+                        : []
+                    }
+                  >
+                    {canAdd ? 'Add to cart' : 'Sold out'}
+                  </AddToCartButton>
+                </div>
+                <Link
+                  to="/cart"
+                  className="local-btn-secondary w-full sm:flex-1 min-h-[3rem]"
                 >
-                  Add to cart
-                </AddToCartButton>
-              ) : null}
-              <Link
-                to="/cart"
-                className="local-pill flex-1 border border-local-border text-center px-6 py-3.5 text-sm font-semibold hover:bg-local-sand transition-colors"
-              >
-                View cart
-              </Link>
+                  View cart
+                </Link>
+              </div>
             </div>
 
             <div className="border-t border-local-border pt-6">
@@ -105,7 +136,7 @@ export function LocalProductPage({product, selectedVariant, productOptions}) {
                     key={tab}
                     type="button"
                     onClick={() => setActiveTab(tab)}
-                    className={`local-pill px-4 py-1.5 text-sm font-medium transition-colors ${
+                    className={`local-pill px-4 py-1.5 text-sm font-medium transition-colors cursor-pointer ${
                       activeTab === tab
                         ? 'bg-primary-800 text-white'
                         : 'bg-local-sand text-local-muted hover:text-local-ink'
@@ -121,9 +152,11 @@ export function LocalProductPage({product, selectedVariant, productOptions}) {
                 )}
                 {activeTab === 'Details' && (
                   <ul className="list-disc pl-5 space-y-1">
-                    {categories.map((cat) => (
-                      <li key={cat}>{cat}</li>
-                    ))}
+                    {categories.length ? (
+                      categories.map((cat) => <li key={cat}>{cat}</li>)
+                    ) : (
+                      <li>No extra details listed.</li>
+                    )}
                   </ul>
                 )}
                 {activeTab === 'Shipping' && (
@@ -144,10 +177,10 @@ export function LocalProductPage({product, selectedVariant, productOptions}) {
             {
               id: product.id,
               title: product.title,
-              price: selectedVariant?.price.amount || '0',
+              price: cartVariant?.price?.amount || '0',
               vendor: product.vendor,
-              variantId: selectedVariant?.id || '',
-              variantTitle: selectedVariant?.title || '',
+              variantId: cartVariant?.id || '',
+              variantTitle: cartVariant?.title || '',
               quantity: 1,
             },
           ],
