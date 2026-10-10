@@ -1,12 +1,12 @@
 import {useLoaderData, data} from 'react-router';
 import {CartForm} from '@shopify/hydrogen';
-import {CartMain} from '~/components/CartMain';
+import {LocalCartPage} from '~/components/local/LocalCartPage';
 
 /**
  * @type {Route.MetaFunction}
  */
 export const meta = () => {
-  return [{title: `Hydrogen | Cart`}];
+  return [{title: 'Your cart — Local'}];
 };
 
 /**
@@ -111,12 +111,7 @@ export default function Cart() {
   /** @type {LoaderReturnData} */
   const cart = useLoaderData();
 
-  return (
-    <div className="cart">
-      <h1>Cart</h1>
-      <CartMain layout="page" cart={cart} />
-    </div>
-  );
+  return <LocalCartPage cart={cart} />;
 }
 
 /** @typedef {import('react-router').HeadersFunction} HeadersFunction */
