@@ -12,6 +12,7 @@ import {CartForm} from '@shopify/hydrogen';
 export function AddToCartButton({
   analytics,
   children,
+  className,
   disabled,
   lines,
   onClick,
@@ -27,6 +28,7 @@ export function AddToCartButton({
           />
           <button
             type="submit"
+            className={className}
             onClick={onClick}
             disabled={disabled ?? fetcher.state !== 'idle'}
           >
