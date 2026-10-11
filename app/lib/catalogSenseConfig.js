@@ -1,3 +1,40 @@
+export const DEFAULT_CATALOGSENSE_API_ORIGIN = 'https://vapp.catalogsense.com';
+
+/**
+ * Storefront / Oxygen hosts must never be used as the CatalogSense events API.
+ * @param {string} hostname
+ */
+function isCatalogSenseApiHostname(hostname) {
+  const host = hostname.toLowerCase();
+  return host === 'catalogsense.com' || host.endsWith('.catalogsense.com');
+}
+
+/**
+ * Absolute CatalogSense API origin (no trailing slash). Never returns a relative path
+ * or a Shopify storefront host (common misconfiguration → POST /v1/sdk/events on Oxygen → 405).
+ *
+ * @param {string | undefined} fromEnv
+ */
+export function resolveCatalogSenseApiOrigin(fromEnv) {
+  const raw = fromEnv?.trim();
+  if (!raw) return DEFAULT_CATALOGSENSE_API_ORIGIN;
+
+  if (raw.startsWith('/')) {
+    return DEFAULT_CATALOGSENSE_API_ORIGIN;
+  }
+
+  try {
+    const url = raw.includes('://') ? new URL(raw) : new URL(`https://${raw}`);
+    if (isCatalogSenseApiHostname(url.hostname)) {
+      return url.origin;
+    }
+  } catch {
+    /* fall through */
+  }
+
+  return DEFAULT_CATALOGSENSE_API_ORIGIN;
+}
+
 /**
  * @param {string} publishableKey
  */
@@ -33,7 +70,9 @@ export function getCatalogSenseLoaderState(env) {
     return {config: null, liveKeyBlockedOnLocalhost: true};
   }
 
-  const endpoint = env.PUBLIC_CATALOGSENSE_API_ORIGIN?.trim();
+  const endpoint = resolveCatalogSenseApiOrigin(
+    env.PUBLIC_CATALOGSENSE_API_ORIGIN,
+  );
   const debug = env.PUBLIC_CATALOGSENSE_DEBUG === 'true';
   const devConsent =
     import.meta.env.DEV &&
@@ -42,7 +81,7 @@ export function getCatalogSenseLoaderState(env) {
   return {
     config: {
       publishableKey,
-      endpoint: endpoint || undefined,
+      endpoint,
       debug,
       devConsent,
     },

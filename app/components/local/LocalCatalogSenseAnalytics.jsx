@@ -5,6 +5,7 @@ import {
   HydrogenConsentProvider,
 } from '@catalogsense/hydrogen';
 import {useAnalytics} from '@shopify/hydrogen';
+import {CATALOGSENSE_EVENTS_API_ORIGIN} from '~/lib/catalogSenseNetworkFix';
 
 /** @returns {import('@catalogsense/sdk').ConsentProvider} */
 function grantedDevConsentProvider() {
@@ -49,7 +50,8 @@ export function LocalCatalogSenseAnalytics({
 
     const client = new CatalogSenseClient({
       publishableKey,
-      endpoint,
+      endpoint: CATALOGSENSE_EVENTS_API_ORIGIN,
+      endpointUrl: CATALOGSENSE_EVENTS_API_ORIGIN,
       debug,
       consentProvider,
     });
@@ -79,7 +81,7 @@ export function LocalCatalogSenseAnalytics({
     return () => {
       client.destroy?.();
     };
-  }, [publishableKey, endpoint, debug, devConsent]);
+  }, [publishableKey, debug, devConsent]);
 
   return children;
 }

@@ -23,6 +23,7 @@ import {getCatalogSenseLoaderState} from './lib/catalogSenseConfig';
 import {resolveCheckoutDomain} from './lib/shopifyEnv';
 import {LocalCatalogSenseAnalytics} from './components/local/LocalCatalogSenseAnalytics';
 import {LocalCatalogSenseDevKeyAlert} from './components/local/LocalCatalogSenseDevKeyAlert';
+import {CATALOGSENSE_WIRING_BUILD} from './lib/catalogSenseNetworkFix';
 import {ClearCartAfterShopifyReturn} from './components/local/ClearCartAfterShopifyReturn';
 
 /**
@@ -193,6 +194,7 @@ export function Layout({children}) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta name="cs-build" content={CATALOGSENSE_WIRING_BUILD} />
         <link rel="stylesheet" href={tailwindCss}></link>
         <link rel="stylesheet" href={localThemeCss}></link>
         <link rel="stylesheet" href={resetStyles}></link>
